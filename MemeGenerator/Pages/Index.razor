@@ -1,0 +1,82 @@
+﻿@page "/"
+
+<PageTitle>Index</PageTitle>
+
+<h1>Hello, world!</h1>
+
+<p>
+    Token:
+    <input @bind="Token"/>
+</p>
+
+<p>
+    Image:
+    <input @bind="Image"/>
+</p>
+
+<p>
+    <select value="@Effect" @onchange="Change">
+        <option >-----------------</option>
+        <option value="3000years">3000 years</option>
+        <option value="challenger">Challenger</option>
+        <option value="brazzers">Brazzers</option>
+        <option value="deepfry">Deepfry</option>
+        <option value="triggered">Triggered</option>
+        <option value="tobecontinued">To be continued</option>
+        <option value="moustache">Moustache</option>
+    </select>
+</p>
+
+<p>
+    <button class="btn btn-success" @onclick="Gen">Générer</button>
+</p>
+
+
+@if (Loading)
+{
+    <Loader/>
+}
+else if (ImageDataURL != null)
+{
+    <img src="@ImageDataURL"/>
+}
+
+@code
+{
+    private string Token = "d83aa7c970b5d94edb18a35dc8f7fdc5c8e922e5169f74edb7e04493ea0d82b115bdbea2a20708890ecac065b71c8ccb14786fe7e03191e37d498355cc34bc0a";
+    private string Image = "https://cdn.discordapp.com/avatars/116818077714219013/17ffc00391b65a83f718f0125df2b75f.png?size=4096";
+    private string? Effect;
+    private string? ImageDataURL;
+    private bool Loading;
+
+    private async Task Gen()
+    {
+        HttpClient client = new HttpClient();
+
+        client.BaseAddress = new Uri("https://v1.api.amethyste.moe/generate/");
+        client.DefaultRequestHeaders.Add("Authorization", $"Bearer {Token}");
+
+        Loading = true;
+        HttpResponseMessage response = await client.PostAsJsonAsync<Payload>(Effect, new Payload
+        {
+            url = Image
+        });
+
+        byte[] b = await response.Content.ReadAsByteArrayAsync();
+        string imagesrc = Convert.ToBase64String(b);
+
+        ImageDataURL = string.Format("data:image/jpeg;base64,{0}", imagesrc);
+        Loading = false;
+    }
+
+    private void Change(ChangeEventArgs e)
+    {
+        Console.WriteLine(e);
+        Effect = e.Value.ToString();
+    }
+
+    private class Payload
+    {
+        public string url { get; set; }
+    }
+}
